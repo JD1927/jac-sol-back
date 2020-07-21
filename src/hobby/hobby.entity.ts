@@ -1,6 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity, OneToMany } from 'typeorm';
-import { Person } from 'src/person/person.entity';
 import { PersonHobby } from 'src/person/person_hobby/person_hobby.entity';
+import { BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Hobby extends BaseEntity {
@@ -11,5 +10,5 @@ export class Hobby extends BaseEntity {
   name: string;
 
   @OneToMany(() => PersonHobby, personHobby => personHobby.person, { cascade: true })
-  personConnection: Person[];
+  personConnection: PersonHobby[];
 }

@@ -90,11 +90,11 @@ export class Person extends BaseEntity {
   academicLevelId: number;
 
   // HOBBY
-  @OneToMany(() => PersonHobby, personHobby => personHobby.hobby, { eager: false, cascade: true })
+  @OneToMany(() => PersonHobby, personHobby => personHobby.hobby, { eager: false })
   hobbyConnection: PersonHobby[];
 
   // PROFESSION
-  @OneToMany(() => PersonProfession, personHobby => personHobby.profession, { eager: false, cascade: true })
+  @OneToMany(() => PersonProfession, personProfession => personProfession.profession, { eager: false })
   professionConnection: PersonProfession[];
 
   // CONTACT NUMBER

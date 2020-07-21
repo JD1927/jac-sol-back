@@ -10,6 +10,6 @@ export class Profession extends BaseEntity {
   @Column()
   name: string;
 
-  @OneToMany(() => PersonProfession, personHobby => personHobby.person, { eager: false, cascade: true })
+  @OneToMany(() => PersonProfession, personHobby => personHobby.person, { cascade: true })
   personConnection: Person[];
 }

@@ -1,11 +1,14 @@
 import { InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { ContactNumber } from 'src/contact-number/contact-number.entity';
+import { Hobby } from 'src/hobby/hobby.entity';
 import { EntityRepository, Repository } from 'typeorm';
 import { PersonDto } from './dto/person.dto';
 import { Person } from './person.entity';
-import { ContactNumber } from 'src/contact-number/contact-number.entity';
 import { PersonHobbyDto } from './person_hobby/person_hobby.dto';
-import { PersonHobby } from './person_hobby/person_hobby.entity';
-import { PersonProfession } from './person_profession/person_profession.entity';
+import { PersonHobby, PersonHobbyList } from './person_hobby/person_hobby.entity';
+import { PersonProfessionDto } from './person_profession/person_profession.dto';
+import { PersonProfession, PersonProfessionList } from './person_profession/person_profession.entity';
+import { Profession } from 'src/profession/profession.entity';
 
 @EntityRepository(Person)
 export class PersonRepository extends Repository<Person> {
@@ -49,7 +52,7 @@ export class PersonRepository extends Repository<Person> {
       where: { id },
       relations: [
         'documentType', 'role', 'gender', 'healthcareType', 'healthcare',
-        'committee', 'academicLevel', 'hobbyConnection', 'professionConnection', 'relative', 'contactNumber'
+        'committee', 'academicLevel', 'relative', 'contactNumber'
       ]
     });
 
@@ -65,8 +68,8 @@ export class PersonRepository extends Repository<Person> {
     await this.createQueryBuilder().delete().from(PersonHobby).where(`personId = :id`, { id }).execute();
     await this.createQueryBuilder().delete().from(PersonProfession).where(`personId = :id`, { id }).execute();
     await this.createQueryBuilder().delete().from(ContactNumber).where(`personId = :id`, { id }).execute();
-
     const result = await this.delete({ id });
+
     if (result.affected === 0) {
       this.notFoundException(id);
     }
@@ -80,11 +83,52 @@ export class PersonRepository extends Repository<Person> {
     return person;
   }
 
+  private async getPersonByIdWithoutRelations(id: number): Promise<Person> {
+    const found = await this.findOne({ where: { id } });
+
+    if (!found) {
+      this.notFoundException(id);
+    }
+
+    this.logger.verbose(`Getting Person with ID: ${id} succesfully`);
+    return found;
+  }
+
+  async getPersonHobbyListById(id: number): Promise<PersonHobbyList[]> {
+    let hobbyList: PersonHobbyList[] = await this.createQueryBuilder()
+      .from(PersonHobby, 'ph')
+      .addSelect('person.id', 'personId')
+      .addSelect('hobby.id', 'hobbyId')
+      .addSelect('hobby.name', 'hobbyName')
+      .innerJoin(Hobby, 'hobby', 'ph.hobbyId = hobby.id')
+      .innerJoin(Person, 'person', 'person.id = ph.personId')
+      .where(`ph.personId = :id`, { id })
+      .getRawMany();
+
+    console.table(hobbyList);
+
+    hobbyList = hobbyList.map((hobby) => {
+      return {
+        personId: hobby.personId,
+        hobbyId: hobby.hobbyId,
+        hobbyName: hobby.hobbyName
+      }
+    });
+
+    if (!hobbyList || hobbyList.length > 0) {
+      this.logger.verbose(`Getting PersonHobbyList with personId: ${id} succesfully`);
+    } else {
+      this.logger.verbose(`PersonHobbyList with personId: '${id}' was not found.`);
+    }
+    return hobbyList; 
+  }
+
   async addPersonHobby(personHobbyDto: PersonHobbyDto): Promise<PersonHobby> {
     const { personId, hobbyId } = personHobbyDto;
+
     const personHobby = new PersonHobby();
-    personHobby.personId = personId;
     personHobby.hobbyId = hobbyId;
+    personHobby.personId = personId;
 
     try {
       await personHobby.save();
@@ -98,12 +142,15 @@ export class PersonRepository extends Repository<Person> {
 
   async getPersonHobbyById(personHobbyDto: PersonHobbyDto): Promise<PersonHobby> {
     const { personId: id, hobbyId: hobby } = personHobbyDto;
-    const query = this.createQueryBuilder().select('person_hobby').from(PersonHobby, 'person_hobby').where(`personId = :id`, { id }).andWhere('hobbyId = :hobby', { hobby });
+    const query = this.createQueryBuilder()
+      .select('person_hobby').from(PersonHobby, 'person_hobby')
+      .where(`person_hobby.personId = :id`, { id })
+      .andWhere('person_hobby.hobbyId = :hobby', { hobby });
     const found: PersonHobby = await query.getOne();
 
     if (!found) {
       this.logger.error(`PersonHobby with ID: '${id}':'${hobby}' not found.`);
-    throw new NotFoundException(`PersonHobby with ID: '${id}':'${hobby}' not found.`);
+      throw new NotFoundException(`PersonHobby with ID: '${id}':'${hobby}' not found.`);
     }
 
     this.logger.verbose(`Getting PersonHobby with ID: ${id}:${hobby} succesfully`);
@@ -112,7 +159,9 @@ export class PersonRepository extends Repository<Person> {
 
   async deletePersonHobbyById(personHobbyDto: PersonHobbyDto): Promise<void> {
     const { personId: id, hobbyId } = personHobbyDto;
-    const result = await this.createQueryBuilder().delete().from(PersonHobby).where(`personId = :id`, { id }).andWhere(`hobbyId = :hobbyId`, { hobbyId }).execute();
+    const result = await this.createQueryBuilder()
+      .delete().from(PersonHobby)
+      .where(`personId = :id`, { id }).andWhere(`hobbyId = :hobbyId`, { hobbyId }).execute();
 
     if (result.affected === 0) {
       this.notFoundException(id);
@@ -122,23 +171,97 @@ export class PersonRepository extends Repository<Person> {
   async updatePersonHobbyById(personHobbyDto: PersonHobbyDto): Promise<PersonHobby> {
     const { personId, newHobbyId } = personHobbyDto;
     const personHobby = await this.getPersonHobbyById(personHobbyDto);
-    await this.deletePersonHobbyById(personHobbyDto);
-    personHobby.hobbyId = newHobbyId;
+    const { hobbyId } = personHobby;
+    await this.deletePersonHobbyById({ personId, hobbyId });
     personHobby.personId = personId;
+    personHobby.hobbyId = newHobbyId;
+
     this.logger.verbose(`Updating PersonHobby with ID: ${personId}:${newHobbyId} succesfully`);
     await personHobby.save();
     return personHobby;
   }
 
-  private async getPersonByIdWithoutRelations(id: number): Promise<Person> {
-    const found = await this.findOne({ where: { id } });
+  async getPersonProfessionListById(id: number): Promise<PersonProfessionList[]> {
+    let professionList: PersonProfessionList[] = await this.createQueryBuilder()
+      .from(PersonProfession, 'pp')
+      .addSelect('person.id', 'personId')
+      .addSelect('profession.id', 'professionId')
+      .addSelect('profession.name', 'professionName')
+      .innerJoin(Profession, 'profession', 'pp.professionId = profession.id')
+      .innerJoin(Person, 'person', 'person.id = pp.personId')
+      .where(`pp.personId = :id`, { id })
+      .getRawMany();
+
+    professionList = professionList.map((profession) => {
+      return {
+        personId: profession.personId,
+        professionId: profession.professionId,
+        professionName: profession.professionName
+      }
+    });
+
+    if (!professionList || professionList.length > 0) {
+      this.logger.verbose(`Getting PersonProfessionList with personId: ${id} succesfully`);
+    } else {
+      this.logger.verbose(`PersonProfessionList with personId: '${id}' was not found.`);
+    }
+    return professionList; 
+  }
+
+  async addPersonProfession(personProfessionDto: PersonProfessionDto): Promise<PersonProfession> {
+    const { personId, professionId } = personProfessionDto;
+    const personProfession = new PersonProfession();
+    personProfession.personId = personId;
+    personProfession.professionId = professionId;
+
+    try {
+      await personProfession.save();
+      this.logger.verbose(`Person Profession with ID '${personProfessionDto.personId}':'${personProfessionDto.professionId}' 
+      was created succesfully`);
+      return personProfession;
+    } catch (error) {
+      this.logger.error(error.stack);
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async getPersonProfessionById(personProfessionDto: PersonProfessionDto): Promise<PersonProfession> {
+    const { personId: id, professionId: profession } = personProfessionDto;
+    const query = this.createQueryBuilder()
+      .select('person_profession').from(PersonProfession, 'person_profession')
+      .where(`person_profession.personId = :id`, { id }).andWhere('person_profession.professionId = :profession', { profession });
+    const found: PersonProfession = await query.getOne();
 
     if (!found) {
-      this.notFoundException(id);
+      this.logger.error(`PersonProfession with ID: '${id}':'${profession}' not found.`);
+      throw new NotFoundException(`PersonProfession with ID: '${id}':'${profession}' not found.`);
     }
 
-    this.logger.verbose(`Getting Person with ID: ${id} succesfully`);
+    this.logger.verbose(`Getting PersonProfession with ID: ${id}:${profession} succesfully`);
     return found;
+  }
+
+  async deletePersonProfessionById(personProfessionDto: PersonProfessionDto): Promise<void> {
+    const { personId: id, professionId } = personProfessionDto;
+    const result = await this.createQueryBuilder()
+      .delete().from(PersonProfession)
+      .where(`personId = :id`, { id })
+      .andWhere(`professionId = :professionId`, { professionId }).execute();
+
+    if (result.affected === 0) {
+      this.notFoundException(id);
+    }
+  }
+
+  async updatePersonProfessionById(personProfessionDto: PersonProfessionDto): Promise<PersonProfession> {
+    const { personId, newProfessionId } = personProfessionDto;
+    const personHobby = await this.getPersonProfessionById(personProfessionDto);
+    await this.deletePersonProfessionById(personProfessionDto);
+    personHobby.professionId = newProfessionId;
+    personHobby.personId = personId;
+    this.logger.verbose(`Updating PersonHobby with ID: ${personId}:${newProfessionId} succesfully`);
+    await personHobby.save();
+    return personHobby;
   }
 
   private notFoundException(id: number): void {

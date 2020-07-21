@@ -4,7 +4,9 @@ import { Person } from './person.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PersonDto } from './dto/person.dto';
 import { PersonHobbyDto } from './person_hobby/person_hobby.dto';
-import { PersonHobby } from './person_hobby/person_hobby.entity';
+import { PersonHobby, PersonHobbyList } from './person_hobby/person_hobby.entity';
+import { PersonProfessionDto } from './person_profession/person_profession.dto';
+import { PersonProfession, PersonProfessionList } from './person_profession/person_profession.entity';
 
 @Injectable()
 export class PersonService {
@@ -34,6 +36,10 @@ export class PersonService {
     return this.personRepository.updatePersonById(id, committeeDto);
   }
 
+  async getPersonHobbyListById(id: number): Promise<PersonHobbyList[]> {
+    return this.personRepository.getPersonHobbyListById(id);
+  }
+
   async addPersonHobby(personHobbyDto: PersonHobbyDto): Promise<PersonHobby> {
     return this.personRepository.addPersonHobby(personHobbyDto);
   }
@@ -49,4 +55,26 @@ export class PersonService {
   async updatePersonHobbyById(personHobbyDto: PersonHobbyDto): Promise<PersonHobby> {
     return this.personRepository.updatePersonHobbyById(personHobbyDto);
   }
+
+  async getPersonProfessionListById(id: number): Promise<PersonProfessionList[]> {
+    return this.personRepository.getPersonProfessionListById(id);
+  }
+
+  async addPersonProfession(personProfessionDto: PersonProfessionDto): Promise<PersonProfession> {
+    return this.personRepository.addPersonProfession(personProfessionDto);
+  }
+
+  async getPersonProfessionById(personProfessionDto: PersonProfessionDto): Promise<PersonProfession> {
+    return this.personRepository.getPersonProfessionById(personProfessionDto);
+  }
+
+  async deletePersonProfessionById(personProfessionDto: PersonProfessionDto): Promise<void> {
+    return this.personRepository.deletePersonProfessionById(personProfessionDto);
+  }
+
+  async updatePersonProfessionById(personProfessionDto: PersonProfessionDto): Promise<PersonProfession> {
+    return this.personRepository.updatePersonProfessionById(personProfessionDto);
+  }
+
+
 }

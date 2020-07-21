@@ -1,4 +1,3 @@
-import { IsNumber } from 'class-validator';
 import { Person } from 'src/person/person.entity';
 import { Profession } from 'src/profession/profession.entity';
 import { BaseEntity, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
@@ -7,18 +6,23 @@ import { BaseEntity, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeor
 export class PersonProfession extends BaseEntity {
 
   @PrimaryColumn()
-  @IsNumber()
   professionId: number;
 
   @PrimaryColumn()
-  @IsNumber()
   personId: number;
 
   @ManyToOne(() => Person, person => person.professionConnection, { primary: true })
-  @JoinColumn({ name: 'professionId' })
-  profession: Profession;
-  
-  @ManyToOne(() => Profession, profession => profession.personConnection, { primary: true })
   @JoinColumn({ name: 'personId' })
   person: Person;
+  
+  @ManyToOne(() => Profession, profession => profession.personConnection, { primary: true })
+  @JoinColumn({ name: 'professionId' })
+  profession: Profession;
 }
+
+export interface PersonProfessionList {
+  personId: number;
+  professionId: number;
+  professionName: string;
+}
+

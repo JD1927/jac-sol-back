@@ -2,6 +2,7 @@ import { InternalServerErrorException, Logger, NotFoundException } from '@nestjs
 import { EntityRepository, Repository } from 'typeorm';
 import { Hobby } from './hobby.entity';
 import { HobbyDto } from './dto/hobby.dto';
+import { PersonHobby } from 'src/person/person_hobby/person_hobby.entity';
 
 @EntityRepository(Hobby)
 export class HobbyRepository extends Repository<Hobby> {
@@ -45,6 +46,7 @@ export class HobbyRepository extends Repository<Hobby> {
   }
 
   async deleteHobbyById(id: number): Promise<void> {
+    await this.createQueryBuilder().delete().from(PersonHobby).where(`hobbyId = :id`, { id }).execute();
     const result = await this.delete({ id });
     if (result.affected === 0) {
       this.notFoundException(id);
