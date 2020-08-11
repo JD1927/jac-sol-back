@@ -1,6 +1,7 @@
 import { InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ContactNumber } from 'src/contact-number/contact-number.entity';
 import { Hobby } from 'src/hobby/hobby.entity';
+import { Profession } from 'src/profession/profession.entity';
 import { EntityRepository, Repository } from 'typeorm';
 import { PersonDto } from './dto/person.dto';
 import { Person } from './person.entity';
@@ -8,7 +9,6 @@ import { PersonHobbyDto } from './person_hobby/person_hobby.dto';
 import { PersonHobby, PersonHobbyList } from './person_hobby/person_hobby.entity';
 import { PersonProfessionDto } from './person_profession/person_profession.dto';
 import { PersonProfession, PersonProfessionList } from './person_profession/person_profession.entity';
-import { Profession } from 'src/profession/profession.entity';
 
 @EntityRepository(Person)
 export class PersonRepository extends Repository<Person> {
@@ -35,12 +35,46 @@ export class PersonRepository extends Repository<Person> {
           relations: [
             'documentType', 'role', 'gender',
             'healthcareType', 'healthcare',
-            'committee', 'academicLevel'
-          ]
+            'committee', 'academicLevel', 'relative'  
+          ],
+          order: { id: 'ASC' }
         }
       );
       this.logger.verbose(`Getting Person list succesfully`);
       return [...result];
+    } catch (error) {
+      this.logger.error(error.stack);
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async getPersonListReport(roleId?: number): Promise<Person[]> {
+    try {
+      let result = [];
+      if (roleId) {
+        result = await this.find(
+          {
+            relations: [
+              'documentType', 'role', 'gender', 'healthcareType', 'healthcare',
+              'committee', 'academicLevel', 'contactNumber', 'relative'
+            ],
+            where: { roleId },
+            order: { id: 'ASC' }
+          }
+        );
+      } else {
+        result = await this.find(
+          {
+            relations: [
+              'documentType', 'role', 'gender', 'healthcareType', 'healthcare',
+              'academicLevel', 'contactNumber', 'relative'
+            ],
+            order: { id: 'ASC' }
+          }
+        );
+      }
+      this.logger.verbose(`Getting Person list for report succesfully`);
+      return [ ...result ];
     } catch (error) {
       this.logger.error(error.stack);
       throw new InternalServerErrorException();
@@ -52,8 +86,8 @@ export class PersonRepository extends Repository<Person> {
       where: { id },
       relations: [
         'documentType', 'role', 'gender', 'healthcareType', 'healthcare',
-        'committee', 'academicLevel', 'relative', 'contactNumber'
-      ]
+        'committee', 'academicLevel', 'contactNumber', 'relative'
+      ],
     });
 
     if (!found) {
@@ -73,6 +107,7 @@ export class PersonRepository extends Repository<Person> {
     if (result.affected === 0) {
       this.notFoundException(id);
     }
+    this.logger.verbose(`Deleting Person with ID: ${id} succesfully`);
   }
 
   async updatePersonById(id: number, personDto: PersonDto): Promise<Person> {

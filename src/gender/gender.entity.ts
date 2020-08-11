@@ -9,6 +9,9 @@ export class Gender extends BaseEntity {
   @Column()
   name: string;
 
+  @Column()
+  nameCode: string;
+
   @OneToMany(() => Person, person => person.gender)
   person: Person[];
 }

@@ -9,6 +9,9 @@ export class DocumentType extends BaseEntity {
   @Column()
   name: string;
 
+  @Column()
+  nameCode: string;
+
   @OneToMany(() => Person, person => person.documentType)
   person: Person[];
   

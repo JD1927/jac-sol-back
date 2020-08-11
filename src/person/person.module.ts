@@ -8,5 +8,6 @@ import { PersonService } from './person.service';
   imports: [TypeOrmModule.forFeature([PersonRepository])],
   controllers: [PersonController],
   providers: [PersonService],
+  exports: [TypeOrmModule.forFeature([PersonRepository])]
 })
 export class PersonModule { }
