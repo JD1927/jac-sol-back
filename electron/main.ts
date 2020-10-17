@@ -4,8 +4,8 @@ import { bootstrap } from './../src/main';
 
 // Inicializamos la ventana de Electron
 let win: BrowserWindow;
-async function createWindow() {
-  await bootstrap();
+function createWindow() {
+  bootstrap();
   win = new BrowserWindow({ width: 800, height: 600 });
 
   win.loadURL('http://localhost:3000');
