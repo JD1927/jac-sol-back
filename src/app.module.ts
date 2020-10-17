@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { join } from 'path';
 import { AcademicLevelModule } from './academic-level/academic-level.module';
 import { CommitteeModule } from './committee/committee.module';
 import { typeOrmConfig } from './config/typeorm.config';
@@ -28,7 +30,10 @@ import { SharedModule } from './shared/shared.module';
     ProfessionModule,
     HobbyModule,
     PersonModule,
-    ContactNumberModule
+    ContactNumberModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, './../dist-front/jac-sol-front'),
+    })
   ]
 })
 export class AppModule { }

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as Excel from 'exceljs';
-import { ContactNumber } from 'src/contact-number/contact-number.entity';
-import { Person } from 'src/person/person.entity';
-import { PersonRepository } from 'src/person/person.repository';
+import { ContactNumber } from './../contact-number/contact-number.entity';
+import { Person } from './../person/person.entity';
+import { PersonRepository } from './../person/person.repository';
 
 @Injectable()
 export class ExcelReportService {

@@ -2,7 +2,7 @@ import { InternalServerErrorException, Logger, NotFoundException } from '@nestjs
 import { EntityRepository, Repository } from 'typeorm';
 import { Hobby } from './hobby.entity';
 import { HobbyDto } from './dto/hobby.dto';
-import { PersonHobby } from 'src/person/person_hobby/person_hobby.entity';
+import { PersonHobby } from './../person/person_hobby/person_hobby.entity';
 
 @EntityRepository(Hobby)
 export class HobbyRepository extends Repository<Hobby> {

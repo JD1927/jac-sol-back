@@ -1,5 +1,5 @@
-import { Person } from 'src/person/person.entity';
-import { Profession } from 'src/profession/profession.entity';
+import { Person } from './../person.entity';
+import { Profession } from './../../profession/profession.entity';
 import { BaseEntity, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
 @Entity()

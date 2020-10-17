@@ -1,5 +1,5 @@
-import { Person } from 'src/person/person.entity';
-import { BaseEntity, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, PrimaryColumn } from 'typeorm';
+import { Person } from './../person/person.entity';
+import { BaseEntity, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
 @Entity()
 export class ContactNumber extends BaseEntity {

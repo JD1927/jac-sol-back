@@ -10,12 +10,13 @@ import { PersonHobbyDto } from './person_hobby/person_hobby.dto';
 import { PersonHobby, PersonHobbyList } from './person_hobby/person_hobby.entity';
 import { PersonProfessionDto } from './person_profession/person_profession.dto';
 import { PersonProfession, PersonProfessionList } from './person_profession/person_profession.entity';
+import { PersonByRole, MemberByCommittee } from './dto/person.model';
 
 @Controller('api/person')
 export class PersonController {
 
   constructor(private personService: PersonService) { }
-
+  
   @Post()
   createPerson(@Body(new ValidationPipe()) personDto: PersonDto): Promise<Person> {
     return this.personService.createPerson(personDto);
@@ -23,7 +24,17 @@ export class PersonController {
 
   @Get()
   getPersonList(): Promise<Person[]> {
-    return this.personService.getPersonList();
+    return this.personService.getAllPeopleList();
+  }
+
+  @Get('/member/committee')
+  getMembersByCommittee(): Promise<MemberByCommittee[]> {
+    return this.personService.getMembersByCommittee();
+  }
+
+  @Get('/role')
+  getPeopleListByRole(): Promise<PersonByRole[]> {
+    return this.personService.getPeopleListByRole();
   }
 
   @Get(':id')
@@ -58,7 +69,6 @@ export class PersonController {
     @Param('personId', new ParseIntPipe()) personId: number,
     @Param('hobbyId', new ParseIntPipe()) hobbyId: number
   ): Promise<PersonHobby> {
-    console.log(typeof (personId));
     return this.personService.getPersonHobbyById({ personId, hobbyId });
   }
 
@@ -92,7 +102,6 @@ export class PersonController {
     @Param('personId', new ParseIntPipe()) personId: number,
     @Param('professionId', new ParseIntPipe()) professionId: number,
   ): Promise<PersonProfession> {
-    console.log(typeof (personId));
     return this.personService.getPersonProfessionById({ personId, professionId });
   }
 
@@ -109,17 +118,6 @@ export class PersonController {
     @Body(new ValidationPipe()) personProfessionDto: PersonProfessionDto
   ): Promise<PersonProfession> {
     return this.personService.updatePersonProfessionById({ ...personProfessionDto, personId });
-  }
-
-  @Post('/document/file')
-  @UseInterceptors(FileInterceptor('file'))
-  uploadFile(
-    @UploadedFile() file: any,
-    @Body() document: any
-  ) {
-    console.log(file);
-    console.log(document);
-    return { ...file };
   }
 
 }

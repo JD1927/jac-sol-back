@@ -1,5 +1,5 @@
-import { Hobby } from 'src/hobby/hobby.entity';
-import { Person } from 'src/person/person.entity';
+import { Hobby } from './../../hobby/hobby.entity';
+import { Person } from './../person.entity';
 import { BaseEntity, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
 @Entity()

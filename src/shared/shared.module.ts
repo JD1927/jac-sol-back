@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PersonModule } from 'src/person/person.module';
+import { PersonModule } from './../person/person.module';
 import { ExcelReportController } from './excel-report.controller';
 import { ExcelReportService } from './excel-report.service';
 

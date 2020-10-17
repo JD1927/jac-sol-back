@@ -1,4 +1,5 @@
-import { InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { ConflictException, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { deleteViolatesForeignKey } from './../shared/error-code.globals';
 import { EntityRepository, Repository } from 'typeorm';
 import { Committee } from './committee.entity';
 import { CommitteeDto } from './dto/committee.dto';
@@ -24,12 +25,12 @@ export class CommitteeRepository extends Repository<Committee> {
 
   async getCommitteeList(): Promise<Committee[]> {
     try {
-      const result = await this.find();
+      const result = await this.find({ order: { id: 'ASC' } });
       this.logger.verbose(`Getting Committee list succesfully`);
       return [ ...result ];
     } catch (error) {
       this.logger.error(error.stack);
-      throw new InternalServerErrorException();
+      throw new InternalServerErrorException('Se ha presentado un error.');
     }
   }
 
@@ -45,9 +46,18 @@ export class CommitteeRepository extends Repository<Committee> {
   }
 
   async deleteCommitteeById(id: number): Promise<void> {
-    const result = await this.delete({ id });
-    if (result.affected === 0) {
-      this.notFoundException(id);
+    try {
+      const result = await this.delete({ id });
+      if (result.affected === 0) {
+        this.notFoundException(id);
+      } 
+    } catch (error) {
+      this.logger.error(error.stack);
+      const { code } = error;
+      if (code === deleteViolatesForeignKey) {
+        throw new ConflictException(`No es posible realizar esta operación. El Comité '${id}' ya ha sido asignado a una persona.`);
+      }
+      throw new InternalServerErrorException(`Se ha presentado un error.`);
     }
   }
 
@@ -63,7 +73,7 @@ export class CommitteeRepository extends Repository<Committee> {
 
   private notFoundException(id: number, ): void {
     this.logger.error(`Committee with ID: '${id}' not found.`);
-    throw new NotFoundException(`Committee with ID: '${id}' not found.`);
+    throw new NotFoundException(`Comité con ID: '${id}' no fue encontrado.`);
   }
 
 }

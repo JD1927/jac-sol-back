@@ -1,9 +1,13 @@
 import { InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { ContactNumber } from 'src/contact-number/contact-number.entity';
-import { Hobby } from 'src/hobby/hobby.entity';
-import { Profession } from 'src/profession/profession.entity';
+import { Committee } from './../committee/committee.entity';
+import { ContactNumber } from './../contact-number/contact-number.entity';
+import { Hobby } from './../hobby/hobby.entity';
+import { Profession } from './../profession/profession.entity';
+import { Role } from './../role/role.entity';
+import { PersonRole } from '../role/role.model';
 import { EntityRepository, Repository } from 'typeorm';
 import { PersonDto } from './dto/person.dto';
+import { MemberByCommittee, PersonByRole } from './dto/person.model';
 import { Person } from './person.entity';
 import { PersonHobbyDto } from './person_hobby/person_hobby.dto';
 import { PersonHobby, PersonHobbyList } from './person_hobby/person_hobby.entity';
@@ -28,24 +32,66 @@ export class PersonRepository extends Repository<Person> {
     }
   }
 
-  async getPersonList(): Promise<Person[]> {
+  async getAllPeopleList(): Promise<Person[]> {
     try {
-      const result = await this.find(
+      const personList: Person[] = await this.find(
         {
           relations: [
             'documentType', 'role', 'gender',
             'healthcareType', 'healthcare',
-            'committee', 'academicLevel', 'relative'  
+            'committee', 'academicLevel', 'relative'
           ],
           order: { id: 'ASC' }
         }
       );
-      this.logger.verbose(`Getting Person list succesfully`);
-      return [...result];
+      this.logger.verbose(`Getting All People List succesfully`);
+      return personList;
     } catch (error) {
       this.logger.error(error.stack);
       throw new InternalServerErrorException();
     }
+  }
+
+  async getMembersByCommittee(): Promise<MemberByCommittee[]> {
+    const roleId = PersonRole.MEMBER;
+    const membersByCommitte: MemberByCommittee[] = [];
+    const committeeList: Committee[] = await this.getCommitteeList();
+    const memberList: Person[] = await this.find({ where: { roleId } });
+
+    committeeList.forEach((committee: Committee) => {
+      const { id: committeeId, name: committeeName } = committee;
+      membersByCommitte.push({
+        committeeId,
+        committeeName,
+        memberList: memberList.filter((member: Person) => member.committeeId === committeeId).length,
+      });
+    });
+    this.logger.verbose(`Getting Members by Committee List succesfully`);
+    return membersByCommitte;
+  }
+
+  private async getCommitteeList(): Promise<Committee[]> {
+    return await this.createQueryBuilder().select('committee').addOrderBy('committee.id', 'ASC').from(Committee, 'committee').getMany();
+  }
+
+  async getPeopleListByRole(): Promise<PersonByRole[]> {
+    const peopleByRole: PersonByRole[] = [];
+    const roleList: Role[] = await this.getRoleList();
+    const peopleList: Person[] = await this.find();
+
+    roleList.forEach((role: Role) => {
+      const { id: roleId, name: roleName } = role;
+      peopleByRole.push({
+        roleId,
+        roleName,
+        peopleList: peopleList.filter((member: Person) => member.roleId === roleId).length,
+      });
+    });
+    return peopleByRole;
+  }
+
+  private async getRoleList(): Promise<Role[]> {
+    return await this.createQueryBuilder().select('role').from(Role, 'role').getMany();
   }
 
   async getPersonListReport(roleId?: number): Promise<Person[]> {
@@ -74,7 +120,7 @@ export class PersonRepository extends Repository<Person> {
         );
       }
       this.logger.verbose(`Getting Person list for report succesfully`);
-      return [ ...result ];
+      return [...result];
     } catch (error) {
       this.logger.error(error.stack);
       throw new InternalServerErrorException();
@@ -130,17 +176,14 @@ export class PersonRepository extends Repository<Person> {
   }
 
   async getPersonHobbyListById(id: number): Promise<PersonHobbyList[]> {
-    let hobbyList: PersonHobbyList[] = await this.createQueryBuilder()
-      .from(PersonHobby, 'ph')
-      .addSelect('person.id', 'personId')
+    let hobbyList: PersonHobbyList[] = await this.createQueryBuilder('person')
+      .select('person.id', 'personId')
       .addSelect('hobby.id', 'hobbyId')
       .addSelect('hobby.name', 'hobbyName')
-      .innerJoin(Hobby, 'hobby', 'ph.hobbyId = hobby.id')
-      .innerJoin(Person, 'person', 'person.id = ph.personId')
-      .where(`ph.personId = :id`, { id })
+      .innerJoin(PersonHobby, 'ph', 'person.id = ph.personId')
+      .innerJoin(Hobby, 'hobby', 'hobby.id = ph.hobbyId')
+      .where(`person.id = :id`, { id })
       .getRawMany();
-
-    console.table(hobbyList);
 
     hobbyList = hobbyList.map((hobby) => {
       return {
@@ -155,7 +198,7 @@ export class PersonRepository extends Repository<Person> {
     } else {
       this.logger.verbose(`PersonHobbyList with personId: '${id}' was not found.`);
     }
-    return hobbyList; 
+    return hobbyList;
   }
 
   async addPersonHobby(personHobbyDto: PersonHobbyDto): Promise<PersonHobby> {
@@ -240,7 +283,7 @@ export class PersonRepository extends Repository<Person> {
     } else {
       this.logger.verbose(`PersonProfessionList with personId: '${id}' was not found.`);
     }
-    return professionList; 
+    return professionList;
   }
 
   async addPersonProfession(personProfessionDto: PersonProfessionDto): Promise<PersonProfession> {

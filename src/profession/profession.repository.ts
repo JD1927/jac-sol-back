@@ -2,7 +2,7 @@ import { InternalServerErrorException, Logger, NotFoundException } from '@nestjs
 import { EntityRepository, Repository } from 'typeorm';
 import { Profession } from './profession.entity';
 import { ProfessionDto } from './dto/profession.dto';
-import { PersonProfessionDto } from 'src/person/person_profession/person_profession.dto';
+import { PersonProfessionDto } from './../person/person_profession/person_profession.dto';
 
 @EntityRepository(Profession)
 export class ProfessionRepository extends Repository<Profession> {

@@ -35,6 +35,7 @@ lerna-debug.log*
 
 # NPM
 ./*package-lock.json
+package-lock.json
 
 # JAC Reports
 JAC-REPORTS/*

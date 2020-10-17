@@ -1,5 +1,5 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
-import { Person } from 'src/person/person.entity';
+import { Person } from './../person/person.entity';
 
 @Entity()
 export class DocumentType extends BaseEntity {

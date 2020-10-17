@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, BaseEntity, OneToMany } from 'typeorm';
-import { PersonProfession } from 'src/person/person_profession/person_profession.entity';
-import { Person } from 'src/person/person.entity';
+import { PersonProfession } from './../person/person_profession/person_profession.entity';
+import { Person } from './../person/person.entity';
 
 @Entity()
 export class Profession extends BaseEntity {

@@ -7,6 +7,7 @@ import { PersonHobbyDto } from './person_hobby/person_hobby.dto';
 import { PersonHobby, PersonHobbyList } from './person_hobby/person_hobby.entity';
 import { PersonProfessionDto } from './person_profession/person_profession.dto';
 import { PersonProfession, PersonProfessionList } from './person_profession/person_profession.entity';
+import { PersonByRole, MemberByCommittee } from './dto/person.model';
 
 @Injectable()
 export class PersonService {
@@ -20,8 +21,16 @@ export class PersonService {
     return this.personRepository.createPerson(personDto);
   }
 
-  async getPersonList(): Promise<Person[]> {
-    return this.personRepository.getPersonList();
+  async getAllPeopleList(): Promise<Person[]> {
+    return this.personRepository.getAllPeopleList()
+  }
+
+  async getMembersByCommittee(): Promise<MemberByCommittee[]> {
+    return this.personRepository.getMembersByCommittee();
+  }
+
+  async getPeopleListByRole(): Promise<PersonByRole[]> {
+    return this.personRepository.getPeopleListByRole();
   }
 
   async getPersonById(id: number): Promise<Person> {

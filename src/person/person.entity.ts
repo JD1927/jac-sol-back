@@ -1,13 +1,13 @@
-import { AcademicLevel } from 'src/academic-level/academic-level.entity';
-import { Committee } from 'src/committee/committee.entity';
-import { ContactNumber } from 'src/contact-number/contact-number.entity';
-import { DocumentType } from 'src/document-type/document-type.entity';
-import { Gender } from 'src/gender/gender.entity';
-import { HealthcareType } from 'src/healthcare-type/healthcare-type.entity';
-import { Healthcare } from 'src/healthcare/healthcare.entity';
-import { PersonHobby } from 'src/person/person_hobby/person_hobby.entity';
-import { Role } from 'src/role/role.entity';
 import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { AcademicLevel } from './../academic-level/academic-level.entity';
+import { Committee } from './../committee/committee.entity';
+import { ContactNumber } from './../contact-number/contact-number.entity';
+import { DocumentType } from './../document-type/document-type.entity';
+import { Gender } from './../gender/gender.entity';
+import { HealthcareType } from './../healthcare-type/healthcare-type.entity';
+import { Healthcare } from './../healthcare/healthcare.entity';
+import { PersonHobby } from './../person/person_hobby/person_hobby.entity';
+import { Role } from './../role/role.entity';
 import { PersonProfession } from './person_profession/person_profession.entity';
 
 @Entity()
@@ -90,7 +90,7 @@ export class Person extends BaseEntity {
   academicLevelId: number;
 
   // HOBBY
-  @OneToMany(() => PersonHobby, personHobby => personHobby.hobby, { eager: false })
+  @OneToMany(() => PersonHobby, personHobby => personHobby.person)
   hobbyConnection: PersonHobby[];
 
   // PROFESSION
