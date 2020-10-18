@@ -38,4 +38,6 @@ lerna-debug.log*
 package-lock.json
 
 # JAC Reports
-JAC-REPORTS/*
+**/JAC-REPORTS/*
+**/electron-dist
+**/dist-front

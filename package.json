@@ -20,18 +20,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "electron": "electron .",
-    "build-linux": "electron-packager . jac-sol-back --platform linux --arch x64 --out ./electron-dist --overwrite",
-    "build-osx": "electron-packager . jac-sol-back --platform darwin --icon ./electron/assets/icon-512x512.icns --out ./electron-dist --overwrite",
-    "build-win32": "electron-packager . jac-sol-back --platform win32 --icon ./electron/assets/icon-512x512.ico --out ./electron-dist --overwrite",
-    "linux-installer": "electron-installer-debian --src electron-dist/jac-sol-back-linux-x64/ --dest electron-installer/ --arch amd64",
-    "osx-installer": "electron-installer-dmg --src electron-dist/jac-sol-back-linux-x64/ --dest electron-installer/ --arch amd64"
+    "build-win32": "electron-packager . jac-sol-back --platform win32 --icon ./electron/assets/icon-512x512.ico --out ./electron-dist --overwrite"
   },
-  "os": [
-    "darwin",
-    "linux",
-    "win32",
-    "win64"
-  ],
   "main": "dist/electron/main.js",
   "dependencies": {
     "@nestjs/common": "^7.0.0",
@@ -61,8 +51,6 @@
     "@typescript-eslint/eslint-plugin": "^2.23.0",
     "@typescript-eslint/parser": "^2.23.0",
     "electron": "^10.1.3",
-    "electron-installer-debian": "^3.1.0",
-    "electron-installer-dmg": "^3.0.0",
     "electron-packager": "^15.1.0",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.0",
