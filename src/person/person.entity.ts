@@ -24,8 +24,8 @@ export class Person extends BaseEntity {
   @Column()
   dateBirth: string;
 
-  @Column()
-  age: number;
+  @Column({ nullable: true })
+  age?: number;
 
   @Column()
   address: string;

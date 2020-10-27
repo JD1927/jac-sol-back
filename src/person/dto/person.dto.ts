@@ -16,9 +16,6 @@ export class PersonDto {
   @IsDateString()
   dateBirth: string;
 
-  @IsNumber()
-  age: number;
-
   @IsString()
   address: string;
 

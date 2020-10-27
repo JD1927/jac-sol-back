@@ -23,10 +23,10 @@ export class ContactNumberRepository extends Repository<ContactNumber> {
     }
   }
 
-  async getContactNumberListById(id: number): Promise<ContactNumber[]> {
+  async getContactNumberListById(personId: number): Promise<ContactNumber[]> {
     try {
-      const result = await this.find({ where: { id } });
-      this.logger.verbose(`Getting ContactNumber list by ID: '${id}' succesfully`);
+      const result = await this.find({ where: { personId } });
+      this.logger.verbose(`Getting ContactNumber list by personId: '${personId}' succesfully`);
       return [...result];
     } catch (error) {
       this.logger.error(error.stack);
@@ -35,14 +35,14 @@ export class ContactNumberRepository extends Repository<ContactNumber> {
   }
 
   async getContactNumberById(contactNumberDto: ContactNumberDto): Promise<ContactNumber> {
-    const { personId: id, contactNumber } = contactNumberDto;
-    const found = await this.findOne({ where: { id, contactNumber } });
+    const { personId, contactNumber } = contactNumberDto;
+    const found = await this.findOne({ where: { personId, contactNumber } });
 
     if (!found) {
-      this.notFoundException(id);
+      this.notFoundException(personId);
     }
 
-    this.logger.verbose(`Getting ContactNumber with ID: ${id}:${contactNumber} succesfully`);
+    this.logger.verbose(`Getting ContactNumber with ID: ${personId}:${contactNumber} succesfully`);
     return found;
   }
 

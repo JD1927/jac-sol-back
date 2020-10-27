@@ -13,6 +13,7 @@ import { PersonHobbyDto } from './person_hobby/person_hobby.dto';
 import { PersonHobby, PersonHobbyList } from './person_hobby/person_hobby.entity';
 import { PersonProfessionDto } from './person_profession/person_profession.dto';
 import { PersonProfession, PersonProfessionList } from './person_profession/person_profession.entity';
+import * as moment from 'moment';
 
 @EntityRepository(Person)
 export class PersonRepository extends Repository<Person> {
@@ -34,7 +35,7 @@ export class PersonRepository extends Repository<Person> {
 
   async getAllPeopleList(): Promise<Person[]> {
     try {
-      const personList: Person[] = await this.find(
+      const peopleList: Person[] = await this.find(
         {
           relations: [
             'documentType', 'role', 'gender',
@@ -44,8 +45,9 @@ export class PersonRepository extends Repository<Person> {
           order: { id: 'ASC' }
         }
       );
+      peopleList.forEach((person) => person.age = this.getAgeByDateOfBirth(person.dateBirth));
       this.logger.verbose(`Getting All People List succesfully`);
-      return personList;
+      return peopleList;
     } catch (error) {
       this.logger.error(error.stack);
       throw new InternalServerErrorException();
@@ -57,6 +59,7 @@ export class PersonRepository extends Repository<Person> {
     const membersByCommitte: MemberByCommittee[] = [];
     const committeeList: Committee[] = await this.getCommitteeList();
     const memberList: Person[] = await this.find({ where: { roleId } });
+    memberList.forEach((person) => person.age = this.getAgeByDateOfBirth(person.dateBirth));
 
     committeeList.forEach((committee: Committee) => {
       const { id: committeeId, name: committeeName } = committee;
@@ -78,6 +81,7 @@ export class PersonRepository extends Repository<Person> {
     const peopleByRole: PersonByRole[] = [];
     const roleList: Role[] = await this.getRoleList();
     const peopleList: Person[] = await this.find();
+    peopleList.forEach((person) => person.age = this.getAgeByDateOfBirth(person.dateBirth));
 
     roleList.forEach((role: Role) => {
       const { id: roleId, name: roleName } = role;
@@ -96,7 +100,7 @@ export class PersonRepository extends Repository<Person> {
 
   async getPersonListReport(roleId?: number): Promise<Person[]> {
     try {
-      let result = [];
+      let result: Person[] = [];
       if (roleId) {
         result = await this.find(
           {
@@ -119,6 +123,7 @@ export class PersonRepository extends Repository<Person> {
           }
         );
       }
+      result.forEach((person) => person.age = this.getAgeByDateOfBirth(person.dateBirth));
       this.logger.verbose(`Getting Person list for report succesfully`);
       return [...result];
     } catch (error) {
@@ -135,11 +140,10 @@ export class PersonRepository extends Repository<Person> {
         'committee', 'academicLevel', 'contactNumber', 'relative'
       ],
     });
-
     if (!found) {
       this.notFoundException(id);
     }
-
+    found.age = this.getAgeByDateOfBirth(found.dateBirth);
     this.logger.verbose(`Getting Person with ID: ${id} succesfully`);
     return found;
   }
@@ -159,6 +163,7 @@ export class PersonRepository extends Repository<Person> {
   async updatePersonById(id: number, personDto: PersonDto): Promise<Person> {
     let person = await this.getPersonByIdWithoutRelations(id);
     person = this.setPersonData(person, personDto);
+    delete person.age;
     this.logger.verbose(`Updating Person with ID: ${id} succesfully`);
     await person.save();
     return person;
@@ -170,7 +175,7 @@ export class PersonRepository extends Repository<Person> {
     if (!found) {
       this.notFoundException(id);
     }
-
+    found.age = this.getAgeByDateOfBirth(found.dateBirth);
     this.logger.verbose(`Getting Person with ID: ${id} succesfully`);
     return found;
   }
@@ -193,7 +198,7 @@ export class PersonRepository extends Repository<Person> {
       }
     });
 
-    if (!hobbyList || hobbyList.length > 0) {
+    if (hobbyList || hobbyList.length > 0) {
       this.logger.verbose(`Getting PersonHobbyList with personId: ${id} succesfully`);
     } else {
       this.logger.verbose(`PersonHobbyList with personId: '${id}' was not found.`);
@@ -260,14 +265,13 @@ export class PersonRepository extends Repository<Person> {
   }
 
   async getPersonProfessionListById(id: number): Promise<PersonProfessionList[]> {
-    let professionList: PersonProfessionList[] = await this.createQueryBuilder()
-      .from(PersonProfession, 'pp')
+    let professionList: PersonProfessionList[] = await this.createQueryBuilder('person')
       .addSelect('person.id', 'personId')
       .addSelect('profession.id', 'professionId')
       .addSelect('profession.name', 'professionName')
-      .innerJoin(Profession, 'profession', 'pp.professionId = profession.id')
-      .innerJoin(Person, 'person', 'person.id = pp.personId')
-      .where(`pp.personId = :id`, { id })
+      .innerJoin(PersonProfession, 'pp', 'person.id = pp.personId')
+      .innerJoin(Profession, 'profession', 'profession.id = pp.professionId')
+      .where(`person.id = :id`, { id })
       .getRawMany();
 
     professionList = professionList.map((profession) => {
@@ -278,7 +282,7 @@ export class PersonRepository extends Repository<Person> {
       }
     });
 
-    if (!professionList || professionList.length > 0) {
+    if (professionList || professionList.length > 0) {
       this.logger.verbose(`Getting PersonProfessionList with personId: ${id} succesfully`);
     } else {
       this.logger.verbose(`PersonProfessionList with personId: '${id}' was not found.`);
@@ -352,7 +356,6 @@ export class PersonRepository extends Repository<Person> {
     person.documentId = personDto.documentId;
     person.name = personDto.name;
     person.dateBirth = personDto.dateBirth;
-    person.age = personDto.age;
     person.address = personDto.address;
     person.email = personDto.email;
     person.documentTypeId = personDto.documentTypeId;
@@ -365,6 +368,13 @@ export class PersonRepository extends Repository<Person> {
     person.relativeId = personDto.relativeId;
 
     return person;
+  }
+
+  getAgeByDateOfBirth(dateBirth: string): number {
+    const date = moment(new Date(dateBirth));
+    const currentDate = moment();
+
+    return currentDate.diff(date, 'years');
   }
 
 }

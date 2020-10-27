@@ -108,7 +108,7 @@ export class PersonController {
   @Delete('/profession/:personId/:professionId')
   deletePersonProfessionById(
     @Param('personId', new ParseIntPipe()) personId: number,
-    @Param('ProfessionId', new ParseIntPipe()) professionId: number): Promise<void> {
+    @Param('professionId', new ParseIntPipe()) professionId: number): Promise<void> {
     return this.personService.deletePersonProfessionById({ personId, professionId });
   }
 
